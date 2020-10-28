@@ -68,4 +68,59 @@ public class Operations {
         }
         return blocks;
     }
+
+    public List<Block> blocksToMatrices(List<Block> blocks) {
+        List<Block> blocksToMatrices = new ArrayList<>();
+        // Block is a compressed matrix on 4x4
+        blocks.forEach(block -> blocksToMatrices.add(matrix8x8(block)));
+        return blocksToMatrices;
+    }
+
+    // Create the decompressed version of 8x8
+    private Block matrix8x8(Block initialBlock){
+        Block newBlock = new Block(8, initialBlock.getBlockType());
+        newBlock.setInitialWidth(initialBlock.getInitialWidth());
+        newBlock.setInitialHeight(initialBlock.getInitialHeight());
+        newBlock.setXCoordinate(initialBlock.getXCoordinate());
+        newBlock.setYCoordinate(initialBlock.getYCoordinate());
+        newBlock.setXCoordinate(initialBlock.getXCoordinate());
+        newBlock.setYCoordinate(initialBlock.getYCoordinate());
+        double[][] elements = new double[8][8];
+        // We want to keep the old version too
+        double[][] olderVersion = initialBlock.getBlock();
+        int line = 0;
+        int column = 0;
+
+        // Each 2x2 square has the value provided by one element from the compressed 4x4 matrix
+        for(int i = 0; i < 4; i++) {
+            for(int j = 0; j < 4; j++) {
+                elements[line][column] = olderVersion[i][j];
+                elements[line + 1][column] = olderVersion[i][j];
+                elements[line][column + 1] = olderVersion[i][j];
+                elements[line + 1][column + 1] = olderVersion[i][j];
+                column += 2;
+            }
+            column = 0;
+            line += 2;
+        }
+        newBlock.setBlock(elements);
+        return newBlock;
+    }
+
+    public double[][] createReconstructedMatrix(List<Block> blocks){
+        double[][] elements = new double[blocks.get(0).getInitialHeight()][blocks.get(0).getInitialWidth()];
+        for(Block block: blocks){
+            int line = 0;
+            int column = 0;
+            for(int i = block.getXCoordinate(); i < block.getXCoordinate() + 8; i++) {
+                for(int j = block.getYCoordinate(); j < block.getYCoordinate() + 8; j++) {
+                    elements[i][j] = block.getBlock()[line][column];
+                    column++;
+                }
+                column=0;
+                line++;
+            }
+        }
+        return elements;
+    }
 }

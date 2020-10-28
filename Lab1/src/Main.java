@@ -1,3 +1,4 @@
+import controller.Decoder;
 import controller.Encoder;
 import domain.PPM;
 
@@ -15,8 +16,12 @@ public class Main {
         List<Block> uBlocks = encoder.getUBlocks();
         List<Block> vBlocks = encoder.getVBlocks();
 
-        System.out.println(yBlocks);
-        System.out.println(uBlocks);
-        System.out.println(vBlocks);
+        //System.out.println(yBlocks);
+        //System.out.println(uBlocks);
+        //System.out.println(vBlocks);
+
+        Decoder decoder = new Decoder(yBlocks, uBlocks, vBlocks);
+        decoder.decode();
+        decoder.createDecodedImage(ppm.getFormat(), ppm.getMaxValue(), ppm.getWidth(), ppm.getHeight());
     }
 }

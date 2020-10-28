@@ -21,8 +21,27 @@ public class PPM {
     private double[][] u;
     private double[][] v;
 
+    // Need empty constructor for decoded image
+    public PPM() {}
+
+    // Constructor for the encoder
     public PPM(String fileName){
         this.fileName = fileName;
+    }
+
+    // Constructor for the decoder
+    private PPM(PPM img) {
+        this.fileName = img.fileName;
+        this.format = img.format;
+        this.maxValue = img.maxValue;
+        this.width = img.width;
+        this.height = img.height;
+        this.r = new int[height][width];
+        this.g = new int[height][width];
+        this.b = new int[height][width];
+        this.y = img.y;
+        this.u = img.u;
+        this.v = img.v;
     }
 
     public void readPPM() throws IOException {
@@ -37,6 +56,24 @@ public class PPM {
         this.maxValue = Integer.parseInt(reader.readLine());
 
         reader.close();
+    }
+
+    public void writePPM() throws IOException {
+        FileWriter fileWriter = new FileWriter(fileName);
+        PrintWriter printWriter = new PrintWriter(fileWriter);
+
+        printWriter.println(format);
+        printWriter.println(width + " " + height);
+        printWriter.println(maxValue);
+        for (int line = 0; line < height; line++) {
+            for (int column = 0; column < width; column++) {
+                printWriter.println(this.r[line][column]);
+                printWriter.println(this.g[line][column]);
+                printWriter.println(this.b[line][column]);
+            }
+        }
+
+        printWriter.close();
     }
 
     public void generateRGBMatrices() throws IOException {
@@ -81,6 +118,32 @@ public class PPM {
                 v[line][column] = 128 + 0.5 * r[line][column] - 0.418688 * g[line][column] - 0.081312 * b[line][column];
             }
         }
+    }
+
+    public PPM convertYUVtoRGB() {
+        PPM newPPM = new PPM(this);
+        for (int line = 0; line < height; line++)
+            for (int column = 0; column < width; column++) {
+                double rValue = y[line][column] + 1.402 * (v[line][column] - 128);
+                double gValue = y[line][column] - 0.344136 * (u[line][column] - 128) - 0.714136 * (v[line][column] - 128);
+                double bValue = y[line][column] + 1.772 * (u[line][column] - 128);
+                if (rValue > 255)
+                    rValue = 255.0;
+                if (rValue < 0)
+                    rValue = 0.0;
+                if (gValue > 255)
+                    gValue = 255.0;
+                if (gValue < 0)
+                    gValue = 0.0;
+                if (bValue > 255)
+                    bValue = 255.0;
+                if (bValue < 0)
+                    bValue = 0.0;
+                newPPM.r[line][column] = (int) rValue;
+                newPPM.g[line][column] = (int) gValue;
+                newPPM.b[line][column] = (int) bValue;
+            }
+        return newPPM;
     }
 
     // Getters and setters
