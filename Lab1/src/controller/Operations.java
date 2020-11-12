@@ -108,10 +108,12 @@ public class Operations {
     }
 
     public double[][] createReconstructedMatrix(List<Block> blocks){
+        // Must be double[600][800]
         double[][] elements = new double[blocks.get(0).getInitialHeight()][blocks.get(0).getInitialWidth()];
         for(Block block: blocks){
             int line = 0;
             int column = 0;
+            // Matrices are 8x8 now
             for(int i = block.getXCoordinate(); i < block.getXCoordinate() + 8; i++) {
                 for(int j = block.getYCoordinate(); j < block.getYCoordinate() + 8; j++) {
                     elements[i][j] = block.getBlock()[line][column];
