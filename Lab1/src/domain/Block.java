@@ -10,11 +10,13 @@ public class Block {
     private int initialWidth;
     private int initialHeight;
     private double[][] block;
+    private int[][] integersBlock;
 
     public Block(int size, String blockType){
         this.size = size;
         this.blockType = blockType;
         this.block = new double[size][size];
+        this.integersBlock = new int[size][size];
     }
 
     @Override
@@ -83,5 +85,13 @@ public class Block {
 
     public void setBlock(double[][] block) {
         this.block = block;
+    }
+
+    public int[][] getIntegersBlock() {
+        return integersBlock;
+    }
+
+    public void setIntegersBlock(int[][] integersBlock) {
+        this.integersBlock = integersBlock;
     }
 }

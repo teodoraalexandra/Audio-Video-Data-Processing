@@ -6,7 +6,19 @@ import domain.PPM;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Operations {
+class Operations {
+    // Quantization matrix
+    private double[][] Q = {
+            {6, 4, 4, 6, 10, 16, 20, 24},
+            {5, 5, 6, 8, 10, 23, 24, 22},
+            {6, 5, 6, 10, 16, 23, 28, 22},
+            {6, 7, 9, 12, 20, 35, 32, 25},
+            {7, 9, 15, 22, 27, 44, 41, 31},
+            {10, 14, 22, 26, 32, 42, 45, 37},
+            {20, 26, 31, 35, 41, 48, 48, 40},
+            {29, 37, 38, 39, 45, 40, 41, 40}
+    };
+
     private double[][] matrix8x8(int x, int y, double[][] YMatrix) {
         double[][] result = new double[8][8];
         for(int i = 0; i < 8; i++) {
@@ -39,7 +51,7 @@ public class Operations {
 
     // Transform the Y matrix in blocks of 8x8
     // Transform the U and V matrices in blocks 4x4
-    public List<Block> matricesToBlocks(PPM image, double[][] matrix, String type){
+    List<Block> matricesToBlocks(PPM image, double[][] matrix, String type){
         List<Block> blocks = new ArrayList<>();
         // Go through PPM image
         // (i, j) is the position of the block in the image
@@ -69,7 +81,7 @@ public class Operations {
         return blocks;
     }
 
-    public List<Block> blocksToMatrices(List<Block> blocks) {
+    List<Block> blocksToMatrices(List<Block> blocks) {
         List<Block> blocksToMatrices = new ArrayList<>();
         // Block is a compressed matrix on 4x4
         blocks.forEach(block -> blocksToMatrices.add(matrix8x8(block)));
@@ -107,7 +119,7 @@ public class Operations {
         return newBlock;
     }
 
-    public double[][] createReconstructedMatrix(List<Block> blocks){
+    double[][] createReconstructedMatrix(List<Block> blocks) {
         // Must be double[600][800]
         double[][] elements = new double[blocks.get(0).getInitialHeight()][blocks.get(0).getInitialWidth()];
         for(Block block: blocks){
@@ -124,5 +136,74 @@ public class Operations {
             }
         }
         return elements;
+    }
+
+    // Before DCT, we have to substract 128 from every value of 8x8 Block
+    List<Block> substractValue(List<Block> encoded) {
+        for (Block block: encoded) {
+            for (int i = 0; i < 8; i++) {
+                for (int j = 0; j < 8; j++) {
+                    block.getBlock()[i][j] -= 128.0;
+                }
+            }
+        }
+        return encoded;
+    }
+
+    // DCT phase
+    List<Block> forwardDCT(List<Block> encoded) {
+        for (Block block: encoded)
+            block.setIntegersBlock(DCT(block.getBlock()));
+        return encoded;
+    }
+
+    private int[][] DCT(double[][] matrix) {
+        int[][] G = new int[8][8];
+        double constant = (double) 1 / 4;
+
+        for (int u = 0; u < 8; u++)
+            for (int v = 0; v < 8; v++)
+            {
+                G[u][v] = (int) (constant * alpha(u) * alpha(v) * outerSum(matrix, u, v));
+            }
+
+        return G;
+    }
+
+    private double alpha(int value) {
+        return value > 0 ? 1 : (1 / Math.sqrt(2.0));
+    }
+
+    private double outerSum(double[][] matrix, int u, int v) {
+        double sum = 0.0;
+        for (int x = 0; x < 8; x++)
+            sum += innerSum(matrix, u, v, x);
+        return sum;
+    }
+
+    private double innerSum(double[][] matrix, int u, int v, int x) {
+        double sum = 0.0;
+        for (int y = 0; y < 8; y++)
+            sum += product(matrix[x][y], x, y, u, v);
+        return sum;
+    }
+
+    private double product(double matrixValue, int x, int y, int u, int v) {
+        double cosU = Math.cos(
+                ((2 * x + 1) * u * Math.PI) / 16
+        );
+
+        double cosV = Math.cos(
+                ((2 * y + 1) * v * Math.PI) / 16
+        );
+
+        return matrixValue * cosU * cosV;
+    }
+
+    // Quantization phase
+    List<Block> quantizationPhase(List<Block> encoded) {
+        for (Block block: encoded)
+            block.setIntegersBlock(MatrixOperations.divideMatrices(block.getIntegersBlock(), Q));
+        return encoded;
     }
 }

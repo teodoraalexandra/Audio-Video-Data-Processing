@@ -9,14 +9,16 @@ import java.util.List;
 public class Encoder {
     private PPM ppm;
     private Operations operations;
+    private List<Block> quantizationMatrixY;
+    private List<Block> quantizationMatrixU;
+    private List<Block> quantizationMatrixV;
 
     public Encoder(PPM ppm) throws IOException {
         this.ppm = ppm;
         this.operations = new Operations();
-        this.encode();
     }
 
-    private void encode() throws IOException {
+    public void encodeLab1() throws IOException {
         // Read the PPM image
         this.ppm.readPPM();
 
@@ -37,5 +39,40 @@ public class Encoder {
 
     public List<Block> getVBlocks() {
         return operations.matricesToBlocks(this.ppm, this.ppm.getV(), "V");
+    }
+
+    // Continuation for Lab2 ---> Discrete Cosine Transformation and Quantization
+    public void encodeLab2(List<Block> yBlocks, List<Block> uBlocks, List<Block> vBlocks) {
+        // U and V are 4x4, so we must get them back to 8x8
+        // Perform same operation as decoder did in Lab1
+        List<Block> decompressedU = operations.blocksToMatrices(uBlocks);
+        List<Block> decompressedV = operations.blocksToMatrices(vBlocks);
+
+        // Substract 128
+        List<Block> substractedY = operations.substractValue(yBlocks);
+        List<Block> substractedU = operations.substractValue(decompressedU);
+        List<Block> substractedV = operations.substractValue(decompressedV);
+
+        // Transforms these blocks intro another 8x8 DCT coefficient blocks
+        List<Block> yDCT = operations.forwardDCT(substractedY);
+        List<Block> uDCT = operations.forwardDCT(substractedU);
+        List<Block> vDCT = operations.forwardDCT(substractedV);
+
+        // Perform quantization
+        this.quantizationMatrixY = operations.quantizationPhase(yDCT);
+        this.quantizationMatrixU = operations.quantizationPhase(uDCT);
+        this.quantizationMatrixV = operations.quantizationPhase(vDCT);
+    }
+
+    public List<Block> getQuantizationMatrixY() {
+        return quantizationMatrixY;
+    }
+
+    public List<Block> getQuantizationMatrixU() {
+        return quantizationMatrixU;
+    }
+
+    public List<Block> getQuantizationMatrixV() {
+        return quantizationMatrixV;
     }
 }
