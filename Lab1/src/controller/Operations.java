@@ -150,7 +150,7 @@ class Operations {
         return encoded;
     }
 
-    // DCT phase
+    // Forward DCT phase
     List<Block> forwardDCT(List<Block> encoded) {
         for (Block block: encoded)
             block.setIntegersBlock(DCT(block.getBlock()));
@@ -204,6 +204,71 @@ class Operations {
     List<Block> quantizationPhase(List<Block> encoded) {
         for (Block block: encoded)
             block.setIntegersBlock(MatrixOperations.divideMatrices(block.getIntegersBlock(), Q));
+        return encoded;
+    }
+
+    // DeQuantization phase
+    List<Block> deQuantizationPhase(List<Block> encoded) {
+        for (Block block: encoded)
+            block.setIntegersBlock(MatrixOperations.multiplyMatrices(block.getIntegersBlock(), Q));
+        return encoded;
+    }
+
+    // Inverse DCT phase
+    List<Block> inverseDCT(List<Block> encoded) {
+        for (Block block: encoded)
+            block.setIntegersBlock(iDCT(block.getIntegersBlock()));
+        return encoded;
+    }
+
+    private int[][] iDCT(int[][] matrix) {
+        int[][] f = new int[8][8];
+        double constant = (double) 1 / 4;
+
+        for (int x = 0; x < 8; x++)
+            for (int y = 0; y < 8; y++)
+            {
+                f[x][y] = (int) (constant * iOuterSum(matrix, x, y));
+            }
+
+        return f;
+    }
+
+    private double iOuterSum(int[][] matrix, int x, int y) {
+        double sum = 0.0;
+        for (int u = 0; u < 8; u++)
+            sum += iInnerSum(matrix, x, y, u);
+        return sum;
+    }
+
+    private double iInnerSum(int[][] matrix, int x, int y, int u) {
+        double sum = 0.0;
+        for (int v = 0; v < 8; v++)
+            sum += iProduct(matrix[u][v], x, y, u, v);
+        return sum;
+    }
+
+    private double iProduct(double matrixValue, int x, int y, int u, int v) {
+        double cosU = Math.cos(
+                ((2 * x + 1) * u * Math.PI) / 16
+        );
+
+        double cosV = Math.cos(
+                ((2 * y + 1) * v * Math.PI) / 16
+        );
+
+        return alpha(u) * alpha(v) * matrixValue * cosU * cosV;
+    }
+
+    // After DCT, we have to add 128 from every value of 8x8 Block
+    List<Block> addValue(List<Block> encoded) {
+        for (Block block: encoded) {
+            for (int i = 0; i < 8; i++) {
+                for (int j = 0; j < 8; j++) {
+                    block.getBlock()[i][j] += 128.0;
+                }
+            }
+        }
         return encoded;
     }
 }

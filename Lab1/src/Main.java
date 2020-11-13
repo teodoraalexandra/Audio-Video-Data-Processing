@@ -27,7 +27,10 @@ public class Main {
         //System.out.println(uBlocksQuantized);
         //System.out.println(vBlocksQuantized);
 
-        Decoder decoder = new Decoder(yBlocks, uBlocks, vBlocks);
+        // This was used at the first lab
+        //Decoder decoder = new Decoder(yBlocks, uBlocks, vBlocks);
+        // For this lab we will use the quantized 8x8 blocks
+        Decoder decoder = new Decoder(yBlocksQuantized, uBlocksQuantized, vBlocksQuantized);
         decoder.decode();
         decoder.createDecodedImage(ppm.getFormat(), ppm.getMaxValue(), ppm.getWidth(), ppm.getHeight());
     }
