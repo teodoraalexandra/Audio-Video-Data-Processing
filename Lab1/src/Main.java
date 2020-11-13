@@ -23,10 +23,6 @@ public class Main {
         List<Block> uBlocksQuantized = encoder.getQuantizationMatrixU();
         List<Block> vBlocksQuantized = encoder.getQuantizationMatrixV();
 
-        //System.out.println(yBlocksQuantized);
-        //System.out.println(uBlocksQuantized);
-        //System.out.println(vBlocksQuantized);
-
         // This was used at the first lab
         //Decoder decoder = new Decoder(yBlocks, uBlocks, vBlocks);
         // For this lab we will use the quantized 8x8 blocks
