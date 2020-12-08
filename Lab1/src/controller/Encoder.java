@@ -4,6 +4,7 @@ import domain.Block;
 import domain.PPM;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 
 public class Encoder {
@@ -62,6 +63,17 @@ public class Encoder {
         this.quantizationMatrixY = operations.quantizationPhase(yDCT);
         this.quantizationMatrixU = operations.quantizationPhase(uDCT);
         this.quantizationMatrixV = operations.quantizationPhase(vDCT);
+    }
+
+    // Continuation for Lab 3 ---> Entropy encoding (ZigZag parsing and run-length encoding)
+    public List<Integer> encodeLab3(List<Block> yBlocks, List<Block> uBlocks, List<Block> vBlocks) {
+        for (int i = 0; i < yBlocks.size(); i++) {
+            operations.constructEntropy(yBlocks.get(i).getIntegersBlock());
+            operations.constructEntropy(uBlocks.get(i).getIntegersBlock());
+            operations.constructEntropy(vBlocks.get(i).getIntegersBlock());
+        }
+
+        return operations.getEntropy();
     }
 
     public List<Block> getQuantizationMatrixY() {

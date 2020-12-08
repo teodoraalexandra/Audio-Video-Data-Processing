@@ -4,6 +4,8 @@ import domain.Block;
 import domain.PPM;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 class Operations {
@@ -18,6 +20,9 @@ class Operations {
             {20, 26, 31, 35, 41, 48, 48, 40},
             {29, 37, 38, 39, 45, 40, 41, 40}
     };
+
+    // Output for lab 3 encoder
+    private List<Integer> entropy = new ArrayList<>();
 
     private double[][] matrix8x8(int x, int y, double[][] YMatrix) {
         double[][] result = new double[8][8];
@@ -270,5 +275,163 @@ class Operations {
             }
         }
         return encoded;
+    }
+
+    // LAB 3 ENTROPY
+    void constructEntropy(int[][] matrix) {
+        List<Integer> coefficientArray = zigZagParsing(matrix);
+
+        int DC = coefficientArray.get(0);
+
+        // The pair as SIZE + AMPLITUDE
+        entropy.addAll(Arrays.asList(getSize(DC), DC));
+
+        // Add (RUNLENGTH, SIZE, AMPLITUDE) for the rest 63 coefficients
+        for(int i = 1; i < 64; i++) {
+            // RUNLENGTH is the number of consecutive zeroes that occur in front of this AC coefficient
+            int runLength = 0;
+            while(coefficientArray.get(i) == 0) {
+                runLength++;
+                i++;
+                if (i == 64) {
+                    break;
+                }
+            }
+            // We reach last
+            if (i == 64) {
+                entropy.addAll(Arrays.asList(0, 0));
+            } else {
+                entropy.addAll(Arrays.asList(runLength, getSize(coefficientArray.get(i)), coefficientArray.get(i)));
+            }
+        }
+    }
+
+    // Zig zag parsing
+    private List<Integer> zigZagParsing(int[][] matrix) {
+        List<Integer> output = new ArrayList<>();
+
+        int row = 0, col = 0;
+
+        // Boolean variable that will be true if we
+        // need to increment 'row' value otherwise
+        // false - if increment 'col' value
+        boolean row_increment = false;
+
+        for (int i = 1; i <= 8; i++) {
+            for (int j = 0; j < i; j++) {
+                output.add(matrix[row][col]);
+
+                if (j + 1 == i)
+                    break;
+
+                // If row_increment value is true increment row and decrement col
+                // else decrement row and increment col
+                if (row_increment) {
+                    row++;
+                    col--;
+                } else {
+                    row--;
+                    col++;
+                }
+            }
+
+            if (i == 8)
+                break;
+
+            // Update row or col value according to the last increment
+            if (row_increment) {
+                row++;
+                row_increment = false;
+            } else {
+                col++;
+                row_increment = true;
+            }
+        }
+
+        // Update the indexes of row and col variable
+        if (row == 0) {
+            if (col == 7)
+                row++;
+            else
+                col++;
+            row_increment = true;
+        } else {
+            if (row == 7)
+                col++;
+            else
+                row++;
+            row_increment = false;
+        }
+
+        int MAX = 7;
+        for (int len, diagonal = MAX; diagonal > 0; diagonal--) {
+
+            len = Math.min(diagonal, 8);
+
+            for (int i = 0; i < len; ++i) {
+                output.add(matrix[row][col]);
+
+                if (i + 1 == len)
+                    break;
+
+                // Update row or col value according to the last increment
+                if (row_increment) {
+                    row++;
+                    col--;
+                } else {
+                    col++;
+                    row--;
+                }
+            }
+
+            // Update the indexes of row and col variable
+            if (row == 0 || col == 7) {
+                if (col == 7)
+                    row++;
+                else
+                    col++;
+
+                row_increment = true;
+            }
+
+            else if (col == 0 || row == 7) {
+                if (row == 7)
+                    col++;
+                else
+                    row++;
+
+                row_increment = false;
+            }
+        }
+
+        return output;
+    }
+
+    private int getSize(int amplitudeValue) {
+        if (amplitudeValue == 0) return 0;
+        if (amplitudeValue == 1 || amplitudeValue == -1) return 1;
+        if ((amplitudeValue >= -3 && amplitudeValue <= -2) || (amplitudeValue >= 2 && amplitudeValue <= 3))
+            return 2;
+        if ((amplitudeValue >= -7 && amplitudeValue <= -4) || (amplitudeValue >= 4 && amplitudeValue <= 7))
+            return 3;
+        if ((amplitudeValue >= -15 && amplitudeValue <= -8) || (amplitudeValue >= 8 && amplitudeValue <= 15))
+            return 4;
+        if ((amplitudeValue >= -31 && amplitudeValue <= -16) || (amplitudeValue >= 16 && amplitudeValue <= 31))
+            return 5;
+        if ((amplitudeValue >= -63 && amplitudeValue <= -32) || (amplitudeValue >= 32 && amplitudeValue <= 63))
+            return 6;
+        if ((amplitudeValue >= -127 && amplitudeValue <= -64) || (amplitudeValue >= 64 && amplitudeValue <= 127))
+            return 7;
+        if ((amplitudeValue >= -255 && amplitudeValue <= -128) || (amplitudeValue >= 128 && amplitudeValue <= 255))
+            return 8;
+        if ((amplitudeValue >= -511 && amplitudeValue <= -256) || (amplitudeValue >= 256 && amplitudeValue <= 511))
+            return 9;
+        if ((amplitudeValue >= -1023 && amplitudeValue <= -512) || (amplitudeValue >= 512 && amplitudeValue <= 1023))
+            return 10;
+        return -1;
+    }
+
+    List<Integer> getEntropy() {
+        return entropy;
     }
 }
