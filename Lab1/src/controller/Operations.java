@@ -5,7 +5,6 @@ import domain.PPM;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 class Operations {
@@ -125,22 +124,23 @@ class Operations {
     }
 
     double[][] createReconstructedMatrix(List<Block> blocks) {
-        // Must be double[600][800]
-        double[][] elements = new double[blocks.get(0).getInitialHeight()][blocks.get(0).getInitialWidth()];
-        for(Block block: blocks){
-            int line = 0;
-            int column = 0;
-            // Matrices are 8x8 now
-            for(int i = block.getXCoordinate(); i < block.getXCoordinate() + 8; i++) {
-                for(int j = block.getYCoordinate(); j < block.getYCoordinate() + 8; j++) {
-                    elements[i][j] = block.getBlock()[line][column];
-                    column++;
+        double[][] matrix = new double[blocks.get(0).getInitialHeight()][blocks.get(0).getInitialWidth()];
+        int line = 0;
+        int column = 0;
+
+        for (Block block : blocks) {
+            for (int i = 0; i < 8; i++)
+                for (int j = 0; j < 8; j++) {
+                    matrix[line + i][column + j] = block.getIntegersBlock()[i][j];
                 }
-                column=0;
-                line++;
+                column += 8;
+            if (column == block.getInitialWidth()) {
+                line += 8;
+                column = 0;
             }
         }
-        return elements;
+
+        return matrix;
     }
 
     // Before DCT, we have to substract 128 from every value of 8x8 Block
@@ -270,7 +270,7 @@ class Operations {
         for (Block block: encoded) {
             for (int i = 0; i < 8; i++) {
                 for (int j = 0; j < 8; j++) {
-                    block.getBlock()[i][j] += 128.0;
+                    block.getIntegersBlock()[i][j] += 128.0;
                 }
             }
         }
